@@ -11,6 +11,7 @@ use czkawka_core::{
     empty_files::{self, EmptyFiles},
     empty_folder::EmptyFolder,
     temporary::{self, Temporary},
+    similar_files::SimilarImages
 };
 use std::{path::PathBuf, process};
 use structopt::StructOpt;
@@ -177,6 +178,31 @@ fn main() {
             #[cfg(not(debug_assertions))] // This will show too much probably unnecessary data to debug, comment line only if needed
             tf.print_results();
             tf.get_text_messages().print_messages();
+        },
+        Commands::SimilarImages {             directories,
+            excluded_directories,
+            excluded_items,
+            file_to_save,
+            not_recursive } => {
+            let mut sf = SimilarImages::new();
+
+            sf.set_included_directory(path_list_to_str(directories.directories));
+            sf.set_excluded_directory(path_list_to_str(excluded_directories.excluded_directories));
+            sf.set_excluded_items(path_list_to_str(excluded_items.excluded_items));
+            sf.set_recursive_search(!not_recursive.not_recursive);
+
+            sf.find_similar_images(None);
+
+            if let Some(file_name) = file_to_save.file_name() {
+                if !sf.save_results_to_file(file_name) {
+                    sf.get_text_messages().print_messages();
+                    process::exit(1);
+                }
+            }
+
+            #[cfg(not(debug_assertions))] // This will show too much probably unnecessary data to debug, comment line only if needed
+                sf.print_results();
+            sf.get_text_messages().print_messages();
         }
     }
 }
